@@ -14,7 +14,8 @@ The application can run directly on Ubuntu or inside a Docker container.
 - **Docker** — Application containerization.
 - **Linux (Ubuntu)** — Development and deployment environment.
 - **Git** — Version control.
-
+- **Docker Compose** — Multi-container application deployment.
+- **Nginx** — HTTP reverse proxy and request routing.
 ## Project Structure
 
 ```text
@@ -22,6 +23,9 @@ cloud-ops-api/
 ├── main.py
 ├── requirements.txt
 ├── Dockerfile
+├── compose.yaml
+├── nginx/
+│   └── default.conf
 ├── .dockerignore
 ├── .gitignore
 └── README.md
@@ -188,6 +192,70 @@ Both endpoints should return HTTP 200 responses.
 
 ---
 
+## Running with Docker Compose
+
+The application supports a multi-container deployment using
+Docker Compose and Nginx as a reverse proxy.
+
+### Architecture
+
+```text
+Client
+  |
+  | HTTP 127.0.0.1:8081
+  v
+Nginx Reverse Proxy
+  |
+  | http://api:8000
+  v
+FastAPI Backend
+```
+
+Both services communicate through a Docker Compose network.
+
+The FastAPI service is not directly published to the host.
+
+### Start the Services
+
+```bash
+docker compose up -d --build
+```
+
+### Verify the Deployment
+
+```bash
+docker compose ps
+curl -i http://127.0.0.1:8081/health
+curl -i http://127.0.0.1:8081/api/info
+```
+
+### Inspect Logs
+
+```bash
+docker compose logs --tail=20 nginx api
+```
+
+### Stop and Remove Compose Resources
+
+```bash
+docker compose down
+```
+
+This command stops and removes the Compose containers and
+default network, but preserves the application source code
+and Docker images.
+
+### Troubleshooting Exercise
+
+A controlled failure was simulated by stopping the
+FastAPI service while keeping Nginx running.
+
+The client experienced a request timeout. After restarting
+the API service, HTTP 200 responses were restored.
+
+This exercise demonstrated dependency failures, upstream
+connectivity troubleshooting, and service recovery.
+
 ## Docker Networking
 
 The FastAPI application listens on TCP port `8000` inside the container.
@@ -316,7 +384,7 @@ docker network inspect bridge
 
 ## Project Status
 
-**Current Status: Basic API and Docker Containerization Completed**
+**Current Status: Multi-Container Deployment Completed**
 
 ### Completed Features
 
@@ -330,11 +398,12 @@ docker network inspect bridge
 - Practiced container lifecycle management.
 - Diagnosed and recovered a Docker bridge routing issue.
 - Managed source code using Git.
-
+- Deployed FastAPI and Nginx using Docker Compose.
+- Configured Nginx reverse proxy and Docker service discovery.
+- Verified inter-container networking and HTTP request routing.
+- Simulated a backend outage and successfully restored service availability.
 ### Planned Improvements
 
-- Docker Compose for multi-container deployment.
-- Nginx reverse proxy integration.
 - Kubernetes deployment using k3d.
 - Kubernetes Liveness and Readiness Probes.
 - Application monitoring and structured logging.
